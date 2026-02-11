@@ -38,20 +38,29 @@ namespace PointOfSale.Data.Repository
                     }
                     await _dbcontext.SaveChangesAsync();
 
-                    CorrelativeNumber correlative = _dbcontext.CorrelativeNumbers.Where(n => n.Management == "Sale").First();
+                    // Invoice numbering: start at INV400 on a fresh DB.
+                    // Correlative.LastNumber stores the numeric part. We generate the final id as INV{number}.
+                    var correlative = _dbcontext.CorrelativeNumbers.FirstOrDefault(n => n.Management == "Sale");
+                    if (correlative == null)
+                    {
+                        correlative = new CorrelativeNumber
+                        {
+                            Management = "Sale",
+                            LastNumber = 399,
+                            QuantityDigits = 3,
+                            DateUpdate = DateTime.UtcNow
+                        };
+                        _dbcontext.CorrelativeNumbers.Add(correlative);
+                        await _dbcontext.SaveChangesAsync();
+                    }
 
-                    correlative.LastNumber = correlative.LastNumber + 1;
-                    correlative.DateUpdate = DateTime.Now;
+                    correlative.LastNumber = (correlative.LastNumber ?? 399) + 1;
+                    correlative.DateUpdate = DateTime.UtcNow;
 
                     _dbcontext.CorrelativeNumbers.Update(correlative);
                     await _dbcontext.SaveChangesAsync();
 
-
-                    string ceros = string.Concat(Enumerable.Repeat("0", correlative.QuantityDigits.Value));
-                    string saleNumber = ceros + correlative.LastNumber.ToString();
-                    saleNumber = saleNumber.Substring(saleNumber.Length - correlative.QuantityDigits.Value, correlative.QuantityDigits.Value);
-
-                    entity.SaleNumber = saleNumber;
+                    entity.SaleNumber = $"INV{correlative.LastNumber}";
 
                     await _dbcontext.Sales.AddAsync(entity);
                     await _dbcontext.SaveChangesAsync();

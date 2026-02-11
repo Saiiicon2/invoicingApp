@@ -136,6 +136,9 @@ if (string.Equals(autoMigrate, "true", StringComparison.OrdinalIgnoreCase))
     var db = scope.ServiceProvider.GetRequiredService<POINTOFSALEContext>();
     db.Database.Migrate();
 
+    // Always ensure core navigation + numbering exists so the app is usable.
+    EnsureCoreNavigationAndCorrelatives(db);
+
     if (string.Equals(doSeed, "true", StringComparison.OrdinalIgnoreCase))
     {
         SeedDatabase(db);
@@ -146,6 +149,9 @@ else if (string.Equals(autoCreate, "true", StringComparison.OrdinalIgnoreCase))
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<POINTOFSALEContext>();
     db.Database.EnsureCreated();
+
+    // Always ensure core navigation + numbering exists so the app is usable.
+    EnsureCoreNavigationAndCorrelatives(db);
 
     if (string.Equals(doSeed, "true", StringComparison.OrdinalIgnoreCase))
     {
@@ -174,6 +180,9 @@ app.Run();
 
 static void SeedDatabase(POINTOFSALEContext db)
 {
+    // Always ensure core menus/role links/correlatives exist.
+    EnsureCoreNavigationAndCorrelatives(db);
+
     // Minimal bootstrap so you can log in on a brand-new database.
     // Set these on Render (or locally) to control the seeded credentials.
     var seedEmail = Environment.GetEnvironmentVariable("SEED_ADMIN_EMAIL");
@@ -234,8 +243,27 @@ static void SeedDatabase(POINTOFSALEContext db)
         }
     }
 
+    // Menu + RolMenu seeding is handled by EnsureCoreNavigationAndCorrelatives.
+}
+
+static void EnsureCoreNavigationAndCorrelatives(POINTOFSALEContext db)
+{
+    // Ensure at least an Admin role exists.
+    var adminRole = db.Rols.FirstOrDefault(r =>
+        r.Description != null && r.Description.Trim().ToLower() == "admin");
+    if (adminRole == null)
+    {
+        adminRole = new Rol { Description = "Admin", IsActive = true };
+        db.Rols.Add(adminRole);
+        db.SaveChanges();
+    }
+
+    // Ensure numbering starts at INV400 for a fresh DB.
+    EnsureCorrelative(db, management: "Sale", minimumLastNumber: 399);
+    // Optional: reserve a correlativo for quotes (not currently used by code).
+    EnsureCorrelative(db, management: "Quote", minimumLastNumber: 399);
+
     // Seed sidebar menus (only when there are no menus yet).
-    // This matches the structure used by Scripts SQL/Query_Insert.sql and the MenuService query.
     if (!db.Menus.Any())
     {
         var adminParent = new Menu { Description = "Admin", Icon = "mdi mdi-view-dashboard-outline", IsActive = true };
@@ -246,7 +274,6 @@ static void SeedDatabase(POINTOFSALEContext db)
         db.Menus.AddRange(adminParent, inventoryParent, salesParent, reportsParent);
         db.SaveChanges();
 
-        // Parent menus must self-reference so the MenuService can distinguish parents vs children.
         adminParent.IdMenuParent = adminParent.IdMenu;
         inventoryParent.IdMenuParent = inventoryParent.IdMenu;
         salesParent.IdMenuParent = salesParent.IdMenu;
@@ -270,7 +297,6 @@ static void SeedDatabase(POINTOFSALEContext db)
         db.Menus.AddRange(childMenus);
         db.SaveChanges();
 
-        // Grant all seeded child menus to Admin role.
         foreach (var menu in childMenus)
         {
             db.RolMenus.Add(new RolMenu
@@ -284,8 +310,6 @@ static void SeedDatabase(POINTOFSALEContext db)
     }
     else
     {
-        // If menus exist but role-menu links are missing, ensure Admin can navigate.
-        // Keep this conservative: only link known core pages.
         var adminMenuPairs = new (string controller, string action)[]
         {
             ("Admin", "Dashboard"),
@@ -317,6 +341,34 @@ static void SeedDatabase(POINTOFSALEContext db)
             }
         }
 
+        db.SaveChanges();
+    }
+}
+
+static void EnsureCorrelative(POINTOFSALEContext db, string management, int minimumLastNumber)
+{
+    var correlative = db.CorrelativeNumbers.FirstOrDefault(c => c.Management == management);
+    if (correlative == null)
+    {
+        correlative = new CorrelativeNumber
+        {
+            Management = management,
+            LastNumber = minimumLastNumber,
+            QuantityDigits = 3,
+            DateUpdate = DateTime.UtcNow
+        };
+        db.CorrelativeNumbers.Add(correlative);
+        db.SaveChanges();
+        return;
+    }
+
+    var current = correlative.LastNumber ?? 0;
+    if (current < minimumLastNumber)
+    {
+        correlative.LastNumber = minimumLastNumber;
+        correlative.DateUpdate = DateTime.UtcNow;
+        if (correlative.QuantityDigits == null) correlative.QuantityDigits = 3;
+        db.CorrelativeNumbers.Update(correlative);
         db.SaveChanges();
     }
 }

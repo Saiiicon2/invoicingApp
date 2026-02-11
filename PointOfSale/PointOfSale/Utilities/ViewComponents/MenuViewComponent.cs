@@ -21,17 +21,25 @@ namespace PointOfSale.Utilities.ViewComponents
             ClaimsPrincipal claimuser = HttpContext.User;
             List<VMMenu> listaMenus;
 
-            if (claimuser.Identity.IsAuthenticated)
+            if (claimuser.Identity?.IsAuthenticated == true)
             {
-                string idUser = claimuser.Claims
+                var idUserString = claimuser.Claims
                     .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                    .Select(c => c.Value).SingleOrDefault();
+                    .Select(c => c.Value)
+                    .SingleOrDefault();
 
-                listaMenus = _mapper.Map<List<VMMenu>>(await _menuService.GetMenus(int.Parse(idUser)));
+                if (int.TryParse(idUserString, out var idUser))
+                {
+                    listaMenus = _mapper.Map<List<VMMenu>>(await _menuService.GetMenus(idUser));
+                }
+                else
+                {
+                    listaMenus = new List<VMMenu>();
+                }
             }
             else
             {
-                listaMenus = new List<VMMenu>() { };
+                listaMenus = new List<VMMenu>();
             }
 
             return View(listaMenus);
