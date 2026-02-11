@@ -33,27 +33,33 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddDbContext<POINTOFSALEContext>(options =>
 {
+    // Prefer Render's DATABASE_URL when using Postgres.
+    // This avoids accidentally feeding a SQL Server connection string (with keys like Encrypt=...) into Npgsql.
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    var dbProvider = builder.Configuration["DB_PROVIDER"] ?? Environment.GetEnvironmentVariable("DB_PROVIDER");
+
+    var databaseUrlIsPostgres = !string.IsNullOrWhiteSpace(databaseUrl)
+        && Uri.TryCreate(databaseUrl, UriKind.Absolute, out var databaseUri)
+        && (databaseUri.Scheme.Equals("postgres", StringComparison.OrdinalIgnoreCase)
+            || databaseUri.Scheme.Equals("postgresql", StringComparison.OrdinalIgnoreCase));
+
+    var providerSaysPostgres = string.Equals(dbProvider, "postgres", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(dbProvider, "postgresql", StringComparison.OrdinalIgnoreCase)
+        || databaseUrlIsPostgres;
+
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (string.IsNullOrWhiteSpace(connectionString))
+
+    if (providerSaysPostgres && databaseUrlIsPostgres)
     {
-        // Render commonly provides a Postgres URL as DATABASE_URL.
-        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-        if (!string.IsNullOrWhiteSpace(databaseUrl)
-            && Uri.TryCreate(databaseUrl, UriKind.Absolute, out var databaseUri)
-            && (databaseUri.Scheme.Equals("postgres", StringComparison.OrdinalIgnoreCase)
-                || databaseUri.Scheme.Equals("postgresql", StringComparison.OrdinalIgnoreCase)))
-        {
-            var userInfoParts = databaseUri.UserInfo.Split(':', 2);
-            var username = Uri.UnescapeDataString(userInfoParts[0]);
-            var password = userInfoParts.Length > 1 ? Uri.UnescapeDataString(userInfoParts[1]) : string.Empty;
-            var databaseName = databaseUri.AbsolutePath.Trim('/');
+        // Convert DATABASE_URL to an Npgsql connection string.
+        var userInfoParts = databaseUri!.UserInfo.Split(':', 2);
+        var username = Uri.UnescapeDataString(userInfoParts[0]);
+        var password = userInfoParts.Length > 1 ? Uri.UnescapeDataString(userInfoParts[1]) : string.Empty;
+        var databaseName = databaseUri.AbsolutePath.Trim('/');
+        var pgPort = databaseUri.Port > 0 ? databaseUri.Port : 5432;
 
-            var port = databaseUri.Port > 0 ? databaseUri.Port : 5432;
-
-            // Basic conversion for Npgsql.
-            // Render Postgres typically requires SSL.
-            connectionString = $"Host={databaseUri.Host};Port={port};Database={databaseName};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true;";
-        }
+        // Render Postgres typically requires SSL.
+        connectionString = $"Host={databaseUri.Host};Port={pgPort};Database={databaseName};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true;";
     }
 
     if (string.IsNullOrWhiteSpace(connectionString))
@@ -61,15 +67,26 @@ builder.Services.AddDbContext<POINTOFSALEContext>(options =>
         throw new InvalidOperationException("Missing connection string 'ConnectionStrings:DefaultConnection' (or DATABASE_URL for Postgres).");
     }
 
-    // Seamless switch: set DB_PROVIDER=postgres (recommended) or just provide a Postgres-style connection string.
-    var dbProvider = builder.Configuration["DB_PROVIDER"] ?? Environment.GetEnvironmentVariable("DB_PROVIDER");
-    var shouldUsePostgres = string.Equals(dbProvider, "postgres", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(dbProvider, "postgresql", StringComparison.OrdinalIgnoreCase)
+    // Seamless switch: set DB_PROVIDER=postgres (recommended) or provide a Postgres-style connection string.
+    var shouldUsePostgres = providerSaysPostgres
         || connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase)
         || connectionString.Contains("Username=", StringComparison.OrdinalIgnoreCase);
 
     if (shouldUsePostgres)
     {
+        // Guardrail: if someone set ConnectionStrings__DefaultConnection to a SQL Server string on Render,
+        // Npgsql will throw (e.g. "Couldn't set encrypt"). Fail fast with a helpful message.
+        if (connectionString.Contains("Encrypt=", StringComparison.OrdinalIgnoreCase)
+            || connectionString.Contains("TrustServerCertificate=", StringComparison.OrdinalIgnoreCase)
+            || connectionString.Contains("Data Source=", StringComparison.OrdinalIgnoreCase)
+            || connectionString.Contains("Initial Catalog=", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "DB_PROVIDER is set to Postgres, but the configured connection string looks like SQL Server (contains Encrypt=/Data Source=/Initial Catalog). " +
+                "On Render, set DATABASE_URL to your Postgres Internal Database URL (and remove ConnectionStrings__DefaultConnection if it points to SQL Server)."
+            );
+        }
+
         options.UseNpgsql(connectionString);
     }
     else
