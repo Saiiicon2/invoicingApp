@@ -1,0 +1,112 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    
+</script>
+
+<!-- Page Heading -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="toggleDarkMode">
+        <label class="form-check-label" for="toggleDarkMode">Dark Mode</label>
+    </div>
+</div>
+
+<!-- Content Row - Charts Section -->
+<div class="row mb-4">
+    <!-- Area Chart - Sales from last week -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow-sm h-100 rounded-lg">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Sales Overview (Last Week)</h6>
+            </div>
+            <div class="card-body">
+                <div id="salesChart" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Chart - Top Selling Products -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow-sm h-100 rounded-lg">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">Top Selling Products</h6>
+            </div>
+            <div class="card-body">
+                <div id="productsChart" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Row - Key Metrics Section -->
+@model List<DashboardMetric>
+<div class="row">
+    @foreach (var metric in ViewBag.metrics)
+    {
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-@metric.Color shadow-sm h-100 py-4 rounded-lg">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-xs font-weight-bold text-@metric.Color text-uppercase mb-1">@metric.Title</div>
+                            <div class="h5 font-weight-bold text-gray-800">@metric.Value</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-@metric.Icon fa-2x text-@metric.Color"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        // Sales Overview Chart
+        var salesOptions = {
+            chart: { type: 'area', height: 400 },
+            series: [{ name: 'Sales', data: [10, 20, 15, 25, 30, 35, 40] }],
+            xaxis: { categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }
+        };
+        new ApexCharts(document.querySelector("#salesChart"), salesOptions).render();
+
+        // Top Selling Products Chart
+        // var productsOptions = {
+        //     chart: { type: 'pie', height: 400 },
+        //     series: [ Html.Raw(string.Join(",", ViewBag.topProducts.Values))],  // Percentages,
+        //     labels: [
+        //  Html.Raw(string.Join(",", ((Dictionary<string, int>)ViewBag.topProducts).Keys.Select(k => $"'{k}'")))
+        // ]
+
+        // };
+
+        var productsOptions = {
+            chart: { type: 'pie', height: 400 },
+            series: [
+        23,
+        33,
+        44
+            ],
+            labels: [
+        @Html.Raw(string.Join(",", ((Dictionary<string, int>)ViewBag.topProducts).Keys.Select(k => $"'{k}'")))
+            ]
+        };
+        new ApexCharts(document.querySelector("#productsChart"), productsOptions).render();
+
+        // Dark Mode Toggle
+        document.querySelector("#toggleDarkMode").addEventListener("change", (e) => {
+            document.body.classList.toggle("dark-mode", e.target.checked);
+        });
+    </script>
+}
+
+

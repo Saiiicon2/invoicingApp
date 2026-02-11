@@ -1,0 +1,14 @@
+Below are the steps to create the database and run the project correctly.
+
+
+1.- Open "Query_DataBase.sql" file with SQL Server and create database and tables.
+
+2.- Open "Query_Insert.sql" file and insert default records into database tables.
+
+3.- Go to the "appsettings.json" file of the application and change the value of "SQL" with your connection string to your sql server and selecting the database.
+
+  "ConnectionStrings": {
+    "SQL": "here your connection string"
+  },
+
+4.- Run the project.

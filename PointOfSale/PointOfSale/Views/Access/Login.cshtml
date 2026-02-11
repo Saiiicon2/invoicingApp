@@ -1,0 +1,103 @@
+﻿@model PointOfSale.Models.VMUserLogin;
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="P&C Dashboard">
+
+    <title>Sign In </title>
+
+    <!-- GOOGLE FONTS -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500|Poppins:400,500,600,700|Roboto:400,500" rel="stylesheet" />
+    <link href="https://cdn.materialdesignicons.com/4.4.95/css/materialdesignicons.min.css" rel="stylesheet" />
+
+    <!-- SLEEK CSS -->
+    <link id="sleek-css" rel="stylesheet" href="~/css/sleek.css" />
+
+    <style>
+        body {
+            background-image: url('/img/grey.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+            .login-card h2 {
+                text-align: center;
+                margin-bottom: 1.5rem;
+            }
+    </style>
+
+  </head>
+  <body>
+@* <div class="card-header pb-0 text-start">
+    <h4 class="font-weight-bolder pt-3">Login</h4>
+    <p class="mb-0">Enter your email and password to log in</p>
+</div> *@
+<div class="login-card text-center">
+    <img src="../img/logo - Copy.png" class="img-fluid mx-auto d-block" alt="Logo" />
+    <br />
+    <form asp-controller="Access" asp-action="Login" method="post">
+        <div class="row">
+            <div class="form-group col-md-12 mb-4">
+                <input type="email" class="form-control input-lg" asp-for="Email" placeholder="Email">
+            </div>
+
+            <div class="form-group col-md-12 ">
+                <input type="password" class="form-control input-lg" asp-for="PassWord" placeholder="Password">
+            </div>
+
+            <div class="col-md-12">
+                <div class="d-flex my-2 justify-content-between">
+                    <div class="d-inline-block mr-3">
+                        <label class="control control-checkbox">
+                            Keep me logged In.
+                            <input type="checkbox" asp-for="KeepLoggedIn" />
+                            <div class="control-indicator"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-lg btn-primary btn-block mb-4">Sign In</button>
+
+            </div>
+        </div>
+    </form>
+</div>
+@* <div class="card-footer text-center pt-0 px-lg-2 px-1">
+    <p class="mb-4 text-sm mx-auto">
+        <a href="/forgot-password" class="text-primary text-gradient font-weight-bold">Forgot password</a>
+    </p>
+</div> *@
+ 
+
+
+
+    <!-- Javascript -->
+    <script src="~/plugins/jquery/jquery.min.js"></script>
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+
+@* ///////////////////// *@
+
+@* ////////////////////////////////////////////////////////// *@
+</html>

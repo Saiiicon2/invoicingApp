@@ -1,0 +1,174 @@
+﻿
+@{
+    ViewData["Title"] = "SalesHistory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section StylesPOS{
+    <link href="~/plugins/jquery-ui/jquery-ui.css" rel="stylesheet">
+}
+
+<div class="card shadow mb-4">
+     <div class="card-header py-3">
+         <h6>Sale History</h6>
+     </div>
+     <div class="card-body">
+         <div class="form-row align-items-end">
+             <div class="form-group col-sm-3">
+                 <label for="cboSearchBy">Search by</label>
+                 <select class="form-control" id="cboSearchBy">
+                         <option value="date">Dates</option>
+                         <option value="number">Sale Number</option>
+                 </select>
+             </div>
+             <div class="form-group col-sm-3 search-date">
+                  <label for="txtStartDate">Start Date</label>
+                  <input type="text" class="form-control" id="txtStartDate">
+              </div>
+              <div class="form-group col-sm-3 search-date">
+                  <label for="txtEndDate">End Date</label>
+                  <input type="text" class="form-control" id="txtEndDate">
+              </div>
+              <div class="form-group col-sm-3 search-sale">
+                  <label for="txtSaleNumberSearch">Sale Number</label>
+                  <input type="text" class="form-control" id="txtSaleNumberSearch">
+              </div>
+             <div class="form-group col-sm-3">
+                <button class="btn btn-success btn-block" type="button" id="btnSearch"><i class="fas fa-search"></i> Search</button>
+             </div>
+         </div>
+
+         <hr/>
+         <div class="row">
+             <div class="col-sm-12">
+                 <table class="table table-striped" id="tbsale">
+                     <thead>
+                         <tr>
+                             <th>Registration date</th>
+                             <th>Sale Number</th>
+                             <th>Document Type</th>
+                             <th>Client Document</th>
+                             <th>Client name</th>
+                             <th>Total</th>
+                             <th></th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     </tbody>
+                 </table>
+             </div>
+
+         </div>
+     </div>
+ </div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalData" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Sale Details</h5>
+                <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <!-- Section: Registration Info -->
+                    <div class="mb-4">
+                        <h6 class="text-secondary">Capture Information</h6>
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label for="txtRegistrationDate">Date of Capture</label>
+                                <input type="text" class="form-control" id="txtRegistrationDate" disabled>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtSaleNumber">Sale Number</label>
+                                <input type="text" class="form-control" id="txtSaleNumber" disabled>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtRegisterUser">Captured By</label>
+                                <input type="text" class="form-control" id="txtRegisterUser" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Client Info -->
+                    <div class="mb-4">
+                        <h6 class="text-secondary">Client Details</h6>
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label for="txtDocumentType">Document Type</label>
+                                <input type="text" class="form-control" id="txtDocumentType" disabled>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtClientDocument">Client Document</label>
+                                <input type="text" class="form-control" id="txtClientDocument" disabled>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtClientName">Client Name</label>
+                                <input type="text" class="form-control" id="txtClientName" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Financial Details -->
+                    <div class="mb-4">
+                        <h6 class="text-secondary">Financial Summary</h6>
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label for="txtSubTotal">Subtotal</label>
+                                <input type="text" class="form-control" id="txtSubTotal" disabled>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtTaxes">Taxes</label>
+                                <input type="text" class="form-control" id="txtTaxes" disabled>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtTotal">Total Amount</label>
+                                <input type="text" class="form-control" id="txtTotal" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Product List -->
+                    <div>
+                        <h6 class="text-secondary">Purchased Products</h6>
+                        <div class="table-responsive">
+                            <table id="tbProducts" class="table table-bordered table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic content goes here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <a href="#" class="btn btn-success" target="_blank" id="linkPrint">
+                    <i class="fas fa-print"></i> Print
+                </a>
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+ @section Scripts{
+
+    <script src="~/plugins/jquery-ui/jquery-ui.js"></script>
+
+    <script src="~/js/views/SalesHistorySale.js"></script>
+ }
