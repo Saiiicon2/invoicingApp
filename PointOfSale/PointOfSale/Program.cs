@@ -180,10 +180,11 @@ static void SeedDatabase(POINTOFSALEContext db)
     var seedPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD");
     var seedName = Environment.GetEnvironmentVariable("SEED_ADMIN_NAME") ?? "Admin";
 
-    if (string.IsNullOrWhiteSpace(seedEmail) || string.IsNullOrWhiteSpace(seedPassword))
+    var hasSeedUserCreds = !string.IsNullOrWhiteSpace(seedEmail) && !string.IsNullOrWhiteSpace(seedPassword);
+    if (!hasSeedUserCreds)
     {
-        Console.Error.WriteLine("DB_SEED=true but SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD not set; skipping seed.");
-        return;
+        // Still seed roles/menus so the app is navigable even if you created users manually.
+        Console.Error.WriteLine("DB_SEED=true but SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD not set; will seed roles/menus only.");
     }
 
     // Ensure at least an Admin role exists (case-insensitive match).
@@ -196,37 +197,40 @@ static void SeedDatabase(POINTOFSALEContext db)
         db.SaveChanges();
     }
 
-    // Create/update the seeded admin user.
-    var existingSeededUser = db.Users.FirstOrDefault(u => u.Email == seedEmail);
-    if (existingSeededUser == null)
+    if (hasSeedUserCreds)
     {
-        db.Users.Add(new User
+        // Create/update the seeded admin user.
+        var existingSeededUser = db.Users.FirstOrDefault(u => u.Email == seedEmail);
+        if (existingSeededUser == null)
         {
-            Name = seedName,
-            Email = seedEmail,
-            Password = seedPassword,
-            IdRol = adminRole.IdRol,
-            IsActive = true,
-            Photo = Array.Empty<byte>()
-        });
-        db.SaveChanges();
-    }
-    else
-    {
-        var changed = false;
-        if (existingSeededUser.IdRol != adminRole.IdRol)
-        {
-            existingSeededUser.IdRol = adminRole.IdRol;
-            changed = true;
-        }
-        if (existingSeededUser.Photo == null)
-        {
-            existingSeededUser.Photo = Array.Empty<byte>();
-            changed = true;
-        }
-        if (changed)
-        {
+            db.Users.Add(new User
+            {
+                Name = seedName,
+                Email = seedEmail,
+                Password = seedPassword,
+                IdRol = adminRole.IdRol,
+                IsActive = true,
+                Photo = Array.Empty<byte>()
+            });
             db.SaveChanges();
+        }
+        else
+        {
+            var changed = false;
+            if (existingSeededUser.IdRol != adminRole.IdRol)
+            {
+                existingSeededUser.IdRol = adminRole.IdRol;
+                changed = true;
+            }
+            if (existingSeededUser.Photo == null)
+            {
+                existingSeededUser.Photo = Array.Empty<byte>();
+                changed = true;
+            }
+            if (changed)
+            {
+                db.SaveChanges();
+            }
         }
     }
 

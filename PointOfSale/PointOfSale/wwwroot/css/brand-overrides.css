@@ -26,14 +26,6 @@
   border-color: var(--brand-primary-hover) !important;
 }
 
-.btn-primary:focus,
-.btn-primary.focus,
-.btn-outline-primary:focus,
-.btn-outline-primary.focus,
-.custom-control-input:focus ~ .custom-control-label::before {
-  box-shadow: 0 0 0 0.2rem rgba(19, 202, 225, 0.35) !important;
-}
-
 .btn-outline-primary {
   color: var(--brand-primary) !important;
   border-color: var(--brand-primary) !important;
@@ -43,7 +35,7 @@
 .btn-outline-primary:active,
 .btn-outline-primary.active,
 .show > .btn-outline-primary.dropdown-toggle {
-  color: #ffffff !important;
+  color: var(--white) !important;
   background-color: var(--brand-primary-hover) !important;
   border-color: var(--brand-primary-hover) !important;
 }
@@ -67,10 +59,6 @@ a.text-primary:focus {
   background-color: var(--brand-dark) !important;
 }
 
-.sidebar-dark .sidebar .sub-menu {
-  background: rgba(255, 255, 255, 0.04) !important;
-}
-
 .sidebar .sidebar-inner > li > a:before {
   background: var(--brand-primary) !important;
 }
@@ -82,7 +70,7 @@ a.text-primary:focus {
 /* Hover feedback on nav items */
 .sidebar .sidebar-inner > li > a:hover,
 .sidebar-dark .sidebar .sub-menu > li > a:hover {
-  color: #ffffff !important;
+  color: var(--white) !important;
 }
 
 /* --- Header tweaks --- */
@@ -93,4 +81,53 @@ a.text-primary:focus {
 .navbar .sidebar-toggle,
 .navbar .sidebar-offcanvas-toggle {
   color: var(--brand-primary) !important;
+}
+
+/* --- Dark mode (driven by Dashboard toggle adding body.dark-mode) --- */
+body.dark-mode {
+  background-color: var(--dark) !important;
+  color: var(--light) !important;
+}
+
+body.dark-mode .content-wrapper,
+body.dark-mode .content {
+  background-color: var(--dark) !important;
+}
+
+body.dark-mode .navbar,
+body.dark-mode .footer .copyright,
+body.dark-mode .dropdown-menu {
+  background-color: var(--gray-dark) !important;
+  border-color: var(--secondary) !important;
+}
+
+body.dark-mode .card,
+body.dark-mode .modal-content {
+  background-color: var(--gray-dark) !important;
+  border-color: var(--secondary) !important;
+}
+
+body.dark-mode .table,
+body.dark-mode .table th,
+body.dark-mode .table td,
+body.dark-mode .nav-link,
+body.dark-mode .dropdown-item {
+  color: var(--light) !important;
+}
+
+body.dark-mode .dropdown-item:hover,
+body.dark-mode .dropdown-item:focus {
+  background-color: var(--dark) !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .custom-select,
+body.dark-mode .input-group-text {
+  background-color: var(--dark) !important;
+  color: var(--light) !important;
+  border-color: var(--secondary) !important;
+}
+
+body.dark-mode .form-check-label {
+  color: var(--light) !important;
 }
