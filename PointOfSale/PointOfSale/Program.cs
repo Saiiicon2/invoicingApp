@@ -6,6 +6,7 @@ using PointOfSale.Business.Contracts;
 using PointOfSale.Business.Services;
 using PointOfSale.Data.DBContext;
 using PointOfSale.Data.Repository;
+using PointOfSale.Model;
 using PointOfSale.Utilities.Automapper;
 using PointOfSale.Utilities.Extensions;
 using System.Runtime.InteropServices;
@@ -128,17 +129,28 @@ var app = builder.Build();
 // Fallback: schema create without migrations (DB_AUTO_CREATE=true) for simple/dev scenarios.
 var autoMigrate = builder.Configuration["DB_AUTO_MIGRATE"];
 var autoCreate = builder.Configuration["DB_AUTO_CREATE"];
+var doSeed = builder.Configuration["DB_SEED"];
 if (string.Equals(autoMigrate, "true", StringComparison.OrdinalIgnoreCase))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<POINTOFSALEContext>();
     db.Database.Migrate();
+
+    if (string.Equals(doSeed, "true", StringComparison.OrdinalIgnoreCase))
+    {
+        SeedDatabase(db);
+    }
 }
 else if (string.Equals(autoCreate, "true", StringComparison.OrdinalIgnoreCase))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<POINTOFSALEContext>();
     db.Database.EnsureCreated();
+
+    if (string.Equals(doSeed, "true", StringComparison.OrdinalIgnoreCase))
+    {
+        SeedDatabase(db);
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -159,3 +171,42 @@ app.MapControllerRoute(
     pattern: "{controller=Access}/{action=Login}/{id?}");
 
 app.Run();
+
+static void SeedDatabase(POINTOFSALEContext db)
+{
+    // Minimal bootstrap so you can log in on a brand-new database.
+    // Set these on Render (or locally) to control the seeded credentials.
+    var seedEmail = Environment.GetEnvironmentVariable("SEED_ADMIN_EMAIL");
+    var seedPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD");
+    var seedName = Environment.GetEnvironmentVariable("SEED_ADMIN_NAME") ?? "Admin";
+
+    if (string.IsNullOrWhiteSpace(seedEmail) || string.IsNullOrWhiteSpace(seedPassword))
+    {
+        Console.Error.WriteLine("DB_SEED=true but SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD not set; skipping seed.");
+        return;
+    }
+
+    if (!db.Rols.Any())
+    {
+        db.Rols.Add(new Rol
+        {
+            Description = "ADMIN",
+            IsActive = true
+        });
+        db.SaveChanges();
+    }
+
+    if (!db.Users.Any())
+    {
+        var adminRoleId = db.Rols.OrderBy(r => r.IdRol).Select(r => r.IdRol).First();
+        db.Users.Add(new User
+        {
+            Name = seedName,
+            Email = seedEmail,
+            Password = seedPassword,
+            IdRol = adminRoleId,
+            IsActive = true
+        });
+        db.SaveChanges();
+    }
+}
