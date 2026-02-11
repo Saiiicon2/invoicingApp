@@ -208,6 +208,9 @@ static void SeedDatabase(POINTOFSALEContext db)
     var seedPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD");
     var seedName = Environment.GetEnvironmentVariable("SEED_ADMIN_NAME") ?? "Admin";
 
+    seedEmail = string.IsNullOrWhiteSpace(seedEmail) ? seedEmail : seedEmail.Trim().ToLowerInvariant();
+    seedPassword = string.IsNullOrWhiteSpace(seedPassword) ? seedPassword : seedPassword.Trim();
+
     var hasSeedUserCreds = !string.IsNullOrWhiteSpace(seedEmail) && !string.IsNullOrWhiteSpace(seedPassword);
     if (!hasSeedUserCreds)
     {
@@ -228,7 +231,7 @@ static void SeedDatabase(POINTOFSALEContext db)
     if (hasSeedUserCreds)
     {
         // Create/update the seeded admin user.
-        var existingSeededUser = db.Users.FirstOrDefault(u => u.Email == seedEmail);
+        var existingSeededUser = db.Users.FirstOrDefault(u => u.Email != null && u.Email.ToLower() == seedEmail);
         if (existingSeededUser == null)
         {
             db.Users.Add(new User

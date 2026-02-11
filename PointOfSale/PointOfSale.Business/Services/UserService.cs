@@ -25,7 +25,9 @@ namespace PointOfSale.Business.Services
         }
         public async Task<User> Add(User entity)
         {
-            User user_exists = await _repository.Get(u => u.Email == entity.Email);
+            var normalizedEmail = (entity.Email ?? string.Empty).Trim().ToLowerInvariant();
+
+            User user_exists = await _repository.Get(u => u.Email != null && u.Email.ToLower() == normalizedEmail);
 
             if (user_exists != null)
                 throw new TaskCanceledException("The email already exists");
@@ -51,8 +53,9 @@ namespace PointOfSale.Business.Services
 
         public async Task<User> Edit(User entity)
         {
+            var normalizedEmail = (entity.Email ?? string.Empty).Trim().ToLowerInvariant();
 
-            User user_exists = await _repository.Get(u => u.Email == entity.Email && u.IdUsers != entity.IdUsers);
+            User user_exists = await _repository.Get(u => u.Email != null && u.Email.ToLower() == normalizedEmail && u.IdUsers != entity.IdUsers);
 
             if (user_exists != null)
                 throw new TaskCanceledException("The email already exists");
@@ -64,7 +67,7 @@ namespace PointOfSale.Business.Services
                 User user_edit = queryUser.First();
 
                 user_edit.Name = entity.Name;
-                user_edit.Email = entity.Email;
+                user_edit.Email = string.IsNullOrWhiteSpace(entity.Email) ? entity.Email : normalizedEmail;
                 user_edit.Phone = entity.Phone;
                 user_edit.IdRol = entity.IdRol;
                 user_edit.IsActive = entity.IsActive;
@@ -112,8 +115,15 @@ namespace PointOfSale.Business.Services
 
         public async Task<User> GetByCredentials(string email, string password)
         {
+            var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
+            var normalizedPassword = (password ?? string.Empty).Trim();
 
-            User user_found = await _repository.Get(u => u.Email.Equals(email) && u.Password.Equals(password));
+            User user_found = await _repository.Get(u =>
+                u.Email != null
+                && u.Password != null
+                && u.Email.ToLower() == normalizedEmail
+                && u.Password == normalizedPassword
+                && u.IsActive == true);
 
             return user_found;
         }

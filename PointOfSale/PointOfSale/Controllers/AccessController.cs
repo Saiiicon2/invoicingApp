@@ -30,7 +30,7 @@ namespace PointOfSale.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(VMUserLogin model)
         {
-            User user_found = await _userService.GetByCredentials(model.Email, model.PassWord);
+            User user_found = await _userService.GetByCredentials(model.Email?.Trim(), model.PassWord?.Trim());
 
             if (user_found == null)
             {
