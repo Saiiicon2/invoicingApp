@@ -55,6 +55,26 @@ namespace PointOfSale.Business.Services
                                                                         select mchild).ToList()
                                     }).ToList();
 
+            // Fallback: if role-menu links are missing, still render active menus
+            // so the UI doesn't appear "broken".
+            if (listMenu.Count == 0)
+            {
+                var parents = tbMenu.Where(m => m.IsActive == true && m.IdMenuParent != null && m.IdMenuParent == m.IdMenu);
+                var children = tbMenu.Where(m => m.IsActive == true && m.IdMenuParent != null && m.IdMenu != m.IdMenuParent);
+
+                listMenu = (from parent in parents
+                            select new Menu
+                            {
+                                Description = parent.Description,
+                                Icon = parent.Icon,
+                                Controller = parent.Controller,
+                                PageAction = parent.PageAction,
+                                InverseIdMenuParentNavigation = (from child in children
+                                                                where child.IdMenuParent == parent.IdMenu
+                                                                select child).ToList()
+                            }).ToList();
+            }
+
             return listMenu;
         }
     }

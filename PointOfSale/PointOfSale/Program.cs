@@ -343,6 +343,39 @@ static void EnsureCoreNavigationAndCorrelatives(POINTOFSALEContext db)
 
         db.SaveChanges();
     }
+
+    // If additional roles exist but have no permissions yet, grant them the same menu set as Admin.
+    // This prevents a "blank" sidebar experience after fresh migrations/seeding.
+    var adminMenuIds = db.RolMenus
+        .Where(rm => rm.IdRol == adminRole.IdRol && rm.IdMenu != null)
+        .Select(rm => rm.IdMenu!.Value)
+        .Distinct()
+        .ToList();
+
+    if (adminMenuIds.Count > 0)
+    {
+        var roleIds = db.Rols.Where(r => r.IsActive == true).Select(r => r.IdRol).ToList();
+        foreach (var roleId in roleIds)
+        {
+            var hasAny = db.RolMenus.Any(rm => rm.IdRol == roleId);
+            if (hasAny)
+            {
+                continue;
+            }
+
+            foreach (var menuId in adminMenuIds)
+            {
+                db.RolMenus.Add(new RolMenu
+                {
+                    IdRol = roleId,
+                    IdMenu = menuId,
+                    IsActive = true
+                });
+            }
+        }
+
+        db.SaveChanges();
+    }
 }
 
 static void EnsureCorrelative(POINTOFSALEContext db, string management, int minimumLastNumber)
