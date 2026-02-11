@@ -48,14 +48,14 @@ namespace PointOfSale.Data.Repository
                             Management = "Sale",
                             LastNumber = 399,
                             QuantityDigits = 3,
-                            DateUpdate = DateTime.UtcNow
+                            DateUpdate = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
                         };
                         _dbcontext.CorrelativeNumbers.Add(correlative);
                         await _dbcontext.SaveChangesAsync();
                     }
 
                     correlative.LastNumber = (correlative.LastNumber ?? 399) + 1;
-                    correlative.DateUpdate = DateTime.UtcNow;
+                    correlative.DateUpdate = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
                     _dbcontext.CorrelativeNumbers.Update(correlative);
                     await _dbcontext.SaveChangesAsync();

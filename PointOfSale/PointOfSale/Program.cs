@@ -347,6 +347,9 @@ static void EnsureCoreNavigationAndCorrelatives(POINTOFSALEContext db)
 
 static void EnsureCorrelative(POINTOFSALEContext db, string management, int minimumLastNumber)
 {
+    // Postgres column is 'timestamp without time zone' so we must write DateTimeKind.Unspecified.
+    static DateTime PgNow() => DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
     var correlative = db.CorrelativeNumbers.FirstOrDefault(c => c.Management == management);
     if (correlative == null)
     {
@@ -355,7 +358,7 @@ static void EnsureCorrelative(POINTOFSALEContext db, string management, int mini
             Management = management,
             LastNumber = minimumLastNumber,
             QuantityDigits = 3,
-            DateUpdate = DateTime.UtcNow
+            DateUpdate = PgNow()
         };
         db.CorrelativeNumbers.Add(correlative);
         db.SaveChanges();
@@ -366,7 +369,7 @@ static void EnsureCorrelative(POINTOFSALEContext db, string management, int mini
     if (current < minimumLastNumber)
     {
         correlative.LastNumber = minimumLastNumber;
-        correlative.DateUpdate = DateTime.UtcNow;
+        correlative.DateUpdate = PgNow();
         if (correlative.QuantityDigits == null) correlative.QuantityDigits = 3;
         db.CorrelativeNumbers.Update(correlative);
         db.SaveChanges();
