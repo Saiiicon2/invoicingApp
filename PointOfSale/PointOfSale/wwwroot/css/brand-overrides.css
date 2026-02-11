@@ -1,0 +1,96 @@
+/*
+  Minimal branding overrides for the Sleek/Bootstrap theme.
+  Loaded after sleek.css so it can safely override key accents.
+*/
+
+:root {
+  /* Use existing theme palette tokens (defined in sleek.css) */
+  --brand-primary: var(--info);
+  --brand-primary-hover: var(--cyan);
+  --brand-dark: var(--dark);
+}
+
+/* --- Primary accents (buttons, text, badges) --- */
+.btn-primary,
+.btn-primary.disabled,
+.btn-primary:disabled {
+  background-color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary.active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: var(--brand-primary-hover) !important;
+  border-color: var(--brand-primary-hover) !important;
+}
+
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-outline-primary:focus,
+.btn-outline-primary.focus,
+.custom-control-input:focus ~ .custom-control-label::before {
+  box-shadow: 0 0 0 0.2rem rgba(19, 202, 225, 0.35) !important;
+}
+
+.btn-outline-primary {
+  color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active,
+.btn-outline-primary.active,
+.show > .btn-outline-primary.dropdown-toggle {
+  color: #ffffff !important;
+  background-color: var(--brand-primary-hover) !important;
+  border-color: var(--brand-primary-hover) !important;
+}
+
+.text-primary,
+a.text-primary:hover,
+a.text-primary:focus {
+  color: var(--brand-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--brand-primary) !important;
+}
+
+.badge-primary {
+  background-color: var(--brand-primary) !important;
+}
+
+/* --- Sidebar: modern, branded, not overkill --- */
+.sidebar-dark .left-sidebar {
+  background-color: var(--brand-dark) !important;
+}
+
+.sidebar-dark .sidebar .sub-menu {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.sidebar .sidebar-inner > li > a:before {
+  background: var(--brand-primary) !important;
+}
+
+.sidebar .nav > li.active > a i {
+  color: var(--brand-primary) !important;
+}
+
+/* Hover feedback on nav items */
+.sidebar .sidebar-inner > li > a:hover,
+.sidebar-dark .sidebar .sub-menu > li > a:hover {
+  color: #ffffff !important;
+}
+
+/* --- Header tweaks --- */
+.header-light .navbar {
+  border-bottom: 1px solid rgba(229, 233, 242, 0.7) !important;
+}
+
+.navbar .sidebar-toggle,
+.navbar .sidebar-offcanvas-toggle {
+  color: var(--brand-primary) !important;
+}
