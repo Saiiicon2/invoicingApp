@@ -38,8 +38,10 @@ builder.Services.AddDbContext<POINTOFSALEContext>(options =>
     var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
     var dbProvider = builder.Configuration["DB_PROVIDER"] ?? Environment.GetEnvironmentVariable("DB_PROVIDER");
 
+    Uri? databaseUri = null;
     var databaseUrlIsPostgres = !string.IsNullOrWhiteSpace(databaseUrl)
-        && Uri.TryCreate(databaseUrl, UriKind.Absolute, out var databaseUri)
+        && Uri.TryCreate(databaseUrl, UriKind.Absolute, out databaseUri)
+        && databaseUri != null
         && (databaseUri.Scheme.Equals("postgres", StringComparison.OrdinalIgnoreCase)
             || databaseUri.Scheme.Equals("postgresql", StringComparison.OrdinalIgnoreCase));
 
@@ -49,10 +51,10 @@ builder.Services.AddDbContext<POINTOFSALEContext>(options =>
 
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    if (providerSaysPostgres && databaseUrlIsPostgres)
+    if (providerSaysPostgres && databaseUrlIsPostgres && databaseUri != null)
     {
         // Convert DATABASE_URL to an Npgsql connection string.
-        var userInfoParts = databaseUri!.UserInfo.Split(':', 2);
+        var userInfoParts = databaseUri.UserInfo.Split(':', 2);
         var username = Uri.UnescapeDataString(userInfoParts[0]);
         var password = userInfoParts.Length > 1 ? Uri.UnescapeDataString(userInfoParts[1]) : string.Empty;
         var databaseName = databaseUri.AbsolutePath.Trim('/');
