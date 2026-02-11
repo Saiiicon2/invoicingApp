@@ -9,7 +9,11 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        background: linear-gradient(135deg, #007bff, #0056b3);
+                background: linear-gradient(
+                    135deg,
+                    var(--brand-primary, var(--primary)),
+                    var(--brand-primary-hover, var(--primary))
+                );
         color: white;
         border-radius: 20px;
         height: 150px;
@@ -40,8 +44,7 @@
     }
 </style>
 
-<!-- Include FontAwesome -->
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<!-- Include FontAwesome (CSS only; avoids blocked kit JS) -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 @* <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -81,5 +84,5 @@
 </div>
 
 @section Scripts {
-    <script src="~/plugins/custom.js"></script>
+    <script src="~/js/custom.js"></script>
 }

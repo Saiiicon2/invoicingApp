@@ -294,7 +294,9 @@ $(document).ready(function () {
   }
 
   /*======== PROGRESS BAR ========*/
-  NProgress.done();
+  if (typeof NProgress !== "undefined") {
+    NProgress.done();
+  }
 
   /*======== MULTIPLE SELECT ========*/
   var jsExampleBasicMultiple = $(".js-example-basic-multiple");
