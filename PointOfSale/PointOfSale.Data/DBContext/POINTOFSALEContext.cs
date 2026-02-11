@@ -38,6 +38,8 @@ namespace PointOfSale.Data.DBContext
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
+            var isPostgres = Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+
             modelBuilder.Entity<SaleItem>()
             .HasOne(si => si.Sale)
             .WithMany(s => s.SaleItems)
@@ -65,9 +67,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.IsActive).HasColumnName("isActive");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
             });
 
             modelBuilder.Entity<CorrelativeNumber>(entity =>
@@ -80,7 +82,7 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.IdCorrelativeNumber).HasColumnName("idCorrelativeNumber");
 
                 entity.Property(e => e.DateUpdate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("dateUpdate");
 
                 entity.Property(e => e.LastNumber).HasColumnName("lastNumber");
@@ -171,9 +173,9 @@ namespace PointOfSale.Data.DBContext
                     .HasColumnName("pageAction");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
 
                 entity.HasOne(d => d.IdMenuParentNavigation)
                     .WithMany(p => p.InverseIdMenuParentNavigation)
@@ -274,9 +276,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.Quantity).HasColumnName("quantity");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
 
                 entity.HasOne(d => d.IdCategoryNavigation)
                     .WithMany(p => p.Products)
@@ -301,9 +303,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.IsActive).HasColumnName("isActive");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
             });
 
             modelBuilder.Entity<RolMenu>(entity =>
@@ -322,9 +324,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.IsActive).HasColumnName("isActive");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
 
                 entity.HasOne(d => d.IdMenuNavigation)
                     .WithMany(p => p.RolMenus)
@@ -361,9 +363,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.IdUsers).HasColumnName("idUsers");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
 
                 entity.Property(e => e.SaleNumber)
                     .HasMaxLength(6)
@@ -408,9 +410,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.IsActive).HasColumnName("isActive");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
             });
 
             modelBuilder.Entity<User>(entity =>
@@ -447,9 +449,9 @@ namespace PointOfSale.Data.DBContext
                 entity.Property(e => e.Photo).HasColumnName("photo");
 
                 entity.Property(e => e.RegistrationDate)
-                    .HasColumnType("datetime")
+                    .HasColumnType(isPostgres ? "timestamp" : "datetime")
                     .HasColumnName("registrationDate")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasDefaultValueSql(isPostgres ? "CURRENT_TIMESTAMP" : "(getdate())");
 
                 entity.HasOne(d => d.IdRolNavigation)
                     .WithMany(p => p.Users)
