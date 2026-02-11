@@ -25,7 +25,7 @@ namespace PointOfSale.Utilities.Automapper
                 opt => opt.MapFrom(source => source.IdRolNavigation.Description)
             ).ForMember(destiny =>
                 destiny.PhotoBase64,
-                opt => opt.MapFrom(source => Convert.ToBase64String(source.Photo))
+                opt => opt.MapFrom(source => source.Photo != null && source.Photo.Length > 0 ? Convert.ToBase64String(source.Photo) : string.Empty)
             )
             .ForMember(destiny =>
                 destiny.Photo,
@@ -73,7 +73,7 @@ namespace PointOfSale.Utilities.Automapper
             )
             .ForMember(destiny =>
                 destiny.PhotoBase64,
-                opt => opt.MapFrom(source => Convert.ToBase64String(source.Photo))
+                opt => opt.MapFrom(source => source.Photo != null && source.Photo.Length > 0 ? Convert.ToBase64String(source.Photo) : string.Empty)
             );
 
             CreateMap<VMProduct, Product>()

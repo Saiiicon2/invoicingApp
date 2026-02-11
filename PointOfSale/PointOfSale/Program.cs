@@ -186,27 +186,133 @@ static void SeedDatabase(POINTOFSALEContext db)
         return;
     }
 
-    if (!db.Rols.Any())
+    // Ensure at least an Admin role exists (case-insensitive match).
+    var adminRole = db.Rols.FirstOrDefault(r =>
+        r.Description != null && r.Description.Trim().ToLower() == "admin");
+    if (adminRole == null)
     {
-        db.Rols.Add(new Rol
-        {
-            Description = "ADMIN",
-            IsActive = true
-        });
+        adminRole = new Rol { Description = "Admin", IsActive = true };
+        db.Rols.Add(adminRole);
         db.SaveChanges();
     }
 
-    if (!db.Users.Any())
+    // Create/update the seeded admin user.
+    var existingSeededUser = db.Users.FirstOrDefault(u => u.Email == seedEmail);
+    if (existingSeededUser == null)
     {
-        var adminRoleId = db.Rols.OrderBy(r => r.IdRol).Select(r => r.IdRol).First();
         db.Users.Add(new User
         {
             Name = seedName,
             Email = seedEmail,
             Password = seedPassword,
-            IdRol = adminRoleId,
-            IsActive = true
+            IdRol = adminRole.IdRol,
+            IsActive = true,
+            Photo = Array.Empty<byte>()
         });
+        db.SaveChanges();
+    }
+    else
+    {
+        var changed = false;
+        if (existingSeededUser.IdRol != adminRole.IdRol)
+        {
+            existingSeededUser.IdRol = adminRole.IdRol;
+            changed = true;
+        }
+        if (existingSeededUser.Photo == null)
+        {
+            existingSeededUser.Photo = Array.Empty<byte>();
+            changed = true;
+        }
+        if (changed)
+        {
+            db.SaveChanges();
+        }
+    }
+
+    // Seed sidebar menus (only when there are no menus yet).
+    // This matches the structure used by Scripts SQL/Query_Insert.sql and the MenuService query.
+    if (!db.Menus.Any())
+    {
+        var adminParent = new Menu { Description = "Admin", Icon = "mdi mdi-view-dashboard-outline", IsActive = true };
+        var inventoryParent = new Menu { Description = "Inventory", Icon = "mdi mdi-package-variant-closed", IsActive = true };
+        var salesParent = new Menu { Description = "Sales", Icon = "mdi mdi-shopping", IsActive = true };
+        var reportsParent = new Menu { Description = "Reports", Icon = "mdi mdi-chart-bar", IsActive = true };
+
+        db.Menus.AddRange(adminParent, inventoryParent, salesParent, reportsParent);
+        db.SaveChanges();
+
+        // Parent menus must self-reference so the MenuService can distinguish parents vs children.
+        adminParent.IdMenuParent = adminParent.IdMenu;
+        inventoryParent.IdMenuParent = inventoryParent.IdMenu;
+        salesParent.IdMenuParent = salesParent.IdMenu;
+        reportsParent.IdMenuParent = reportsParent.IdMenu;
+        db.SaveChanges();
+
+        var childMenus = new List<Menu>
+        {
+            new Menu { Description = "Dashboard", IdMenuParent = adminParent.IdMenu, Controller = "Admin", PageAction = "Dashboard", IsActive = true },
+            new Menu { Description = "Users", IdMenuParent = adminParent.IdMenu, Controller = "Admin", PageAction = "Users", IsActive = true },
+
+            new Menu { Description = "Categories", IdMenuParent = inventoryParent.IdMenu, Controller = "Inventory", PageAction = "Categories", IsActive = true },
+            new Menu { Description = "Products", IdMenuParent = inventoryParent.IdMenu, Controller = "Inventory", PageAction = "Products", IsActive = true },
+
+            new Menu { Description = "New sale", IdMenuParent = salesParent.IdMenu, Controller = "Sales", PageAction = "NewSale", IsActive = true },
+            new Menu { Description = "Sales history", IdMenuParent = salesParent.IdMenu, Controller = "Sales", PageAction = "SalesHistory", IsActive = true },
+
+            new Menu { Description = "Sales report", IdMenuParent = reportsParent.IdMenu, Controller = "Reports", PageAction = "SalesReport", IsActive = true },
+        };
+
+        db.Menus.AddRange(childMenus);
+        db.SaveChanges();
+
+        // Grant all seeded child menus to Admin role.
+        foreach (var menu in childMenus)
+        {
+            db.RolMenus.Add(new RolMenu
+            {
+                IdRol = adminRole.IdRol,
+                IdMenu = menu.IdMenu,
+                IsActive = true
+            });
+        }
+        db.SaveChanges();
+    }
+    else
+    {
+        // If menus exist but role-menu links are missing, ensure Admin can navigate.
+        // Keep this conservative: only link known core pages.
+        var adminMenuPairs = new (string controller, string action)[]
+        {
+            ("Admin", "Dashboard"),
+            ("Admin", "Users"),
+            ("Inventory", "Categories"),
+            ("Inventory", "Products"),
+            ("Sales", "NewSale"),
+            ("Sales", "SalesHistory"),
+            ("Reports", "SalesReport"),
+        };
+
+        foreach (var (controller, action) in adminMenuPairs)
+        {
+            var menu = db.Menus.FirstOrDefault(m => m.Controller == controller && m.PageAction == action);
+            if (menu == null)
+            {
+                continue;
+            }
+
+            var exists = db.RolMenus.Any(rm => rm.IdRol == adminRole.IdRol && rm.IdMenu == menu.IdMenu);
+            if (!exists)
+            {
+                db.RolMenus.Add(new RolMenu
+                {
+                    IdRol = adminRole.IdRol,
+                    IdMenu = menu.IdMenu,
+                    IsActive = true
+                });
+            }
+        }
+
         db.SaveChanges();
     }
 }
