@@ -9,6 +9,10 @@ namespace PointOfSale.Utilities.ViewComponents
     {
         private readonly IUserService _userService;
 
+        // 1x1 transparent PNG to avoid broken image URLs when no photo exists.
+        private const string TransparentPngBase64 =
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axY9jUAAAAASUVORK5CYII=";
+
         public MenuUserViewComponent(IUserService userService)
         {
             _userService = userService;
@@ -30,15 +34,29 @@ namespace PointOfSale.Utilities.ViewComponents
                     .Where(c => c.Type == ClaimTypes.Name)
                     .Select(c => c.Value).SingleOrDefault();
 
-                int IdUser = Convert.ToInt32( claimuser.Claims
+                var idUserString = claimuser.Claims
                     .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                    .Select(c => c.Value).SingleOrDefault());
+                    .Select(c => c.Value)
+                    .SingleOrDefault();
 
-                User user_found = await _userService.GetById(IdUser);
+                if (int.TryParse(idUserString, out var idUser))
+                {
+                    User user_found = await _userService.GetById(idUser);
+                    if (user_found?.Photo != null && user_found.Photo.Length > 0)
+                    {
+                        photoUser = Convert.ToBase64String(user_found.Photo);
+                    }
+                    else
+                    {
+                        photoUser = TransparentPngBase64;
+                    }
+                }
+                else
+                {
+                    photoUser = TransparentPngBase64;
+                }
 
-                photoUser = Convert.ToBase64String(user_found.Photo);
-
-                emailUser = ((ClaimsIdentity)claimuser.Identity).FindFirst("Email").Value;
+                emailUser = ((ClaimsIdentity)claimuser.Identity).FindFirst("Email")?.Value ?? string.Empty;
             }
 
             ViewData["userName"] = userName;
